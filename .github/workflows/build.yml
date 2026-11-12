@@ -1,5 +1,5 @@
 
-name: BIAN AI Build
+name: BIAN AI APK Builder
 
 on:
   workflow_dispatch:
@@ -13,43 +13,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Extract BIAN AI
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Extract ZIP
         run: |
-          mkdir -p app
+          mkdir app
           unzip -o bian-ai-base.zip -d app
 
-      - name: Find and Install Dependencies
+      - name: Install Dependencies
         run: |
-          PACKAGE=$(find app -name package.json -type f | head -n 1)
-
-          if [ -z "$PACKAGE" ]; then
-            echo "package.json tidak ditemukan di dalam ZIP!"
-            find app -maxdepth 4 -type f
-            exit 1
-          fi
-
-          APP_DIR=$(dirname "$PACKAGE")
-          echo "Project ditemukan: $APP_DIR"
-          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
-
-          cd "$APP_DIR"
+          cd app
           npm install
+          npx cap add android
 
-      - name: Verify Project
+      - name: Build Android
         run: |
-          cd "$APP_DIR"
-          npm run
+          cd app
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
-      - name: Upload Source Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: bian-ai-source
-          path: app/
+          name: BIAN-AI-APK
+          path: app/android/app/build/outputs/apk/debug/app-debug.apk
