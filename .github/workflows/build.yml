@@ -26,14 +26,26 @@ jobs:
           mkdir -p app
           unzip -o bian-ai-base.zip -d app
 
-      - name: Install Dependencies
+      - name: Find and Install Dependencies
         run: |
-          cd app
+          PACKAGE=$(find app -name package.json -type f | head -n 1)
+
+          if [ -z "$PACKAGE" ]; then
+            echo "package.json tidak ditemukan di dalam ZIP!"
+            find app -maxdepth 4 -type f
+            exit 1
+          fi
+
+          APP_DIR=$(dirname "$PACKAGE")
+          echo "Project ditemukan: $APP_DIR"
+          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
+
+          cd "$APP_DIR"
           npm install
 
       - name: Verify Project
         run: |
-          cd app
+          cd "$APP_DIR"
           npm run
 
       - name: Upload Source Artifact
