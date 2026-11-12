@@ -1,0 +1,43 @@
+
+name: BIAN AI Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'bian-ai-base.zip'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Extract BIAN AI
+        run: |
+          mkdir -p app
+          unzip -o bian-ai-base.zip -d app
+
+      - name: Install Dependencies
+        run: |
+          cd app
+          npm install
+
+      - name: Verify Project
+        run: |
+          cd app
+          npm run
+
+      - name: Upload Source Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bian-ai-source
+          path: app/
